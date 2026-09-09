@@ -1,13 +1,32 @@
 "use client";
 
+/* Native images support dynamic Supabase Storage avatar URLs without image-host configuration. */
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { HeartIcon, HomeIcon, MenuIcon } from "./icons";
+import { useApp } from "./app-provider";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const { user, profile, signOut, uploadAvatar } = useApp();
+  const initials = profile?.displayName?.slice(0, 2).toUpperCase() ?? user?.email?.slice(0, 2).toUpperCase() ?? "JP";
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadAvatar(file);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Your profile picture could not be uploaded.");
+    } finally {
+      event.target.value = "";
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -18,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>OTO</span>
         </Link>
         <div className="topbar-tagline">Your J-Pop rotation</div>
-        <div className="avatar">JP</div>
+        {user ? <div className="account-menu"><button className="avatar avatar-button" onClick={() => setAccountOpen((open) => !open)} aria-expanded={accountOpen} aria-haspopup="menu" aria-label="Open account menu">{profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Your profile" /> : initials}</button>{accountOpen && <div className="account-popover" role="menu"><div className="account-summary">{profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : <span className="account-initials">{initials}</span>}<div><strong>{profile?.displayName ?? "OTO listener"}</strong><span>{user.email}</span></div></div><label className="upload-avatar" role="menuitem">Upload profile picture<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void handleAvatarUpload(event)} /></label><button className="sign-out-button" role="menuitem" onClick={() => { setAccountOpen(false); void signOut(); }}>Sign out</button></div>}</div> : <Link className="sign-in-link" href="/auth">Sign in</Link>}
       </header>
 
       <aside className={`sidebar ${menuOpen ? "sidebar-open" : ""}`}>
@@ -27,8 +46,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link className={pathname === "/favourites" ? "nav-link active" : "nav-link"} href="/favourites" onClick={() => setMenuOpen(false)}><HeartIcon /><span>Favourites</span></Link>
         </nav>
         <div className="sidebar-note">
-          <span className="eyebrow">PHASE 1</span>
-          <p>Your ratings are saved on this device.</p>
+          <span className="eyebrow">PHASE 2</span>
+          <p>{user ? "Ratings and favourites are saved to your account." : "Sign in to rate songs and save favourites."}</p>
         </div>
       </aside>
       {menuOpen && <button className="menu-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close menu" />}
