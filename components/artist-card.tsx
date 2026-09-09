@@ -7,7 +7,7 @@ import { useApp } from "./app-provider";
 import { ArtistVisual } from "./artist-visual";
 import { HeartIcon } from "./icons";
 
-export function ArtistCard({ artist }: { artist: Artist }) {
+export function ArtistCard({ artist, note }: { artist: Artist; note?: string }) {
   const router = useRouter();
   const { favourites, toggleFavourite, user } = useApp();
   const favourite = favourites.includes(artist.id);
@@ -36,6 +36,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
         </div>
         <button className={`heart-button ${favourite ? "selected" : ""}`} onClick={handleFavourite} aria-label={`${favourite ? "Remove" : "Add"} ${artist.name} ${favourite ? "from" : "to"} favourites`}><HeartIcon filled={favourite} size={19} /></button>
       </div>
+      {note ? <p className="artist-recommendation-note">{note}</p> : null}
     </article>
   );
 }

@@ -239,7 +239,7 @@ export default function AdminPage() {
 
   return <main className="page admin-page">
     <section className="page-heading"><p className="eyebrow">Catalogue management</p><h1>Admin studio</h1><p>Add or update artists and songs. Audience figures are manual sample values, not live social-media data.</p></section>
-    <nav className="admin-subnav" aria-label="Catalogue sections"><Link href="/admin/artists">Find artists</Link><Link href="/admin/songs">Find songs</Link><Link className="active" href="/admin">Editor</Link></nav>
+    <nav className="admin-subnav" aria-label="Catalogue sections"><Link href="/admin/artists">Find artists</Link><Link href="/admin/songs">Find songs</Link><Link href="/admin/reviews">Reviews</Link><Link className="active" href="/admin">Editor</Link></nav>
     <div className="tab-list" role="tablist" aria-label="Catalogue editor"><button className={tab === "artists" ? "active" : ""} onClick={() => setTab("artists")} role="tab" aria-selected={tab === "artists"}>Artists</button><button className={tab === "songs" ? "active" : ""} onClick={() => setTab("songs")} role="tab" aria-selected={tab === "songs"}>Songs</button></div>
     {message ? <p className="form-message success">{message}</p> : null}{error ? <p className="form-message error">{error}</p> : null}
     {Object.entries(fieldErrors).some(([field]) => field !== "_form") ? <ul className="field-error-summary">{Object.entries(fieldErrors).filter(([field]) => field !== "_form").map(([field, fieldErrorMessage]) => <li key={field}><strong>{field}</strong>: {fieldErrorMessage}</li>)}</ul> : null}

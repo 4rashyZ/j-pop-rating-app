@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/components/app-provider";
+import { Pagination } from "@/components/pagination";
 import { createClient } from "@/lib/supabase/client";
 
 type SongResult = { id: string; title: string; titleJapanese: string | null; release: string; year: number; artistId: string; artistName: string };
 
 export default function AdminSongsPage() {
+  const songsPerPage = 10;
   const { user, profile, hydrated, configured } = useApp();
   const [songs, setSongs] = useState<SongResult[]>([]);
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -24,11 +27,13 @@ export default function AdminSongsPage() {
     return () => window.clearTimeout(timer);
   }, [profile?.role]);
 
-  const filteredSongs = useMemo(() => {
+  const matchingSongs = useMemo(() => {
     const search = query.trim().toLocaleLowerCase();
     if (!search) return songs;
     return songs.filter((song) => [song.title, song.titleJapanese ?? "", song.release, song.artistName].some((value) => value.toLocaleLowerCase().includes(search)));
   }, [songs, query]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(matchingSongs.length / songsPerPage)));
+  const filteredSongs = useMemo(() => matchingSongs.slice((currentPage - 1) * songsPerPage, currentPage * songsPerPage), [matchingSongs, currentPage]);
 
   if (!configured) return <main className="page"><p className="empty-state">Configure Supabase before using administration.</p></main>;
   if (!hydrated) return <main className="page"><p className="empty-state">Loading…</p></main>;
@@ -36,9 +41,10 @@ export default function AdminSongsPage() {
 
   return <main className="page admin-catalogue-page">
     <section className="page-heading"><p className="eyebrow">Admin catalogue</p><h1>Find a song</h1><p>Search by song title, Japanese title, release, or artist, then open the record directly in the editor.</p></section>
-    <nav className="admin-subnav" aria-label="Catalogue sections"><Link href="/admin/artists">Artists</Link><Link className="active" href="/admin/songs">Songs</Link><Link href="/admin">Editor</Link></nav>
+    <nav className="admin-subnav" aria-label="Catalogue sections"><Link href="/admin/artists">Artists</Link><Link className="active" href="/admin/songs">Songs</Link><Link href="/admin/reviews">Reviews</Link><Link href="/admin">Editor</Link></nav>
     <label className="catalogue-search"><span>Search songs</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try Idol, First Love, or YOASOBI…" type="search" /></label>
     {error ? <p className="form-message error">{error}</p> : null}
     <div className="catalogue-results" aria-live="polite"><p className="result-count">{filteredSongs.length} song{filteredSongs.length === 1 ? "" : "s"}</p>{filteredSongs.map((song) => <article className="catalogue-result" key={song.id}><div><Link href={`/artists/${song.artistId}`} className="catalogue-result-title">{song.title}</Link><p>{song.titleJapanese ? `${song.titleJapanese} · ` : ""}{song.artistName} · {song.release} ({song.year})</p></div><Link className="secondary-button" href={`/admin?song=${encodeURIComponent(song.id)}`}>Edit song</Link></article>)}{filteredSongs.length === 0 ? <p className="empty-state">No songs match “{query}”. Try a different title or artist.</p> : null}</div>
+    <Pagination currentPage={currentPage} totalItems={matchingSongs.length} pageSize={songsPerPage} itemLabel="songs" onPageChange={setPage} />
   </main>;
 }

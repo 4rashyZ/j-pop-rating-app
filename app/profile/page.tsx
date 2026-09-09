@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/components/app-provider";
 import { createClient } from "@/lib/supabase/client";
 
@@ -15,7 +15,7 @@ type RatingHistoryItem = {
 };
 
 export default function ProfilePage() {
-  const { user, profile, configured, hydrated, updateProfile } = useApp();
+  const { user, profile, configured, hydrated, updateProfile, favourites } = useApp();
   const [displayNameDraft, setDisplayNameDraft] = useState<string | null>(null);
   const [ratings, setRatings] = useState<RatingHistoryItem[]>([]);
   const [message, setMessage] = useState("");
@@ -52,6 +52,18 @@ export default function ProfilePage() {
     void loadRatings();
   }, [user]);
 
+  const statistics = useMemo(() => {
+    const averageRating = ratings.length ? ratings.reduce((total, item) => total + item.rating, 0) / ratings.length : 0;
+    const highRatings = ratings.filter((item) => item.rating >= 8).length;
+    const artistCounts = new Map<string, { name: string; count: number }>();
+    ratings.forEach((item) => {
+      const current = artistCounts.get(item.artistId);
+      artistCounts.set(item.artistId, { name: item.artistName, count: (current?.count ?? 0) + 1 });
+    });
+    const topArtist = [...artistCounts.values()].sort((first, second) => second.count - first.count || first.name.localeCompare(second.name))[0] ?? null;
+    return { averageRating, highRatings, topArtist };
+  }, [ratings]);
+
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -77,6 +89,12 @@ export default function ProfilePage() {
       <h1>{profile?.displayName ?? "OTO listener"}</h1>
       <p>{user.email} · Your ratings and favourites are visible only to you.</p>
     </section>
+    <section className="profile-statistics" aria-label="Your listening statistics">
+      <article className="profile-stat"><span>Song ratings</span><strong>{ratings.length}</strong><small>saved scores</small></article>
+      <article className="profile-stat"><span>Average score</span><strong>{ratings.length ? statistics.averageRating.toFixed(1) : "—"}</strong><small>out of 10</small></article>
+      <article className="profile-stat"><span>High scores</span><strong>{statistics.highRatings}</strong><small>ratings of 8 or higher</small></article>
+      <article className="profile-stat"><span>Favourite artists</span><strong>{favourites.length}</strong><small>{statistics.topArtist ? `Most rated: ${statistics.topArtist.name}` : "start building your library"}</small></article>
+    </section>
     <section className="profile-grid">
       <form className="profile-card" onSubmit={saveProfile}>
         <h2>Profile details</h2>
@@ -91,7 +109,7 @@ export default function ProfilePage() {
       </form>
       <section className="profile-card">
         <h2>Your library</h2>
-        <p><strong>{ratings.length}</strong> song rating{ratings.length === 1 ? "" : "s"} recorded</p>
+        <p>{statistics.topArtist ? `${statistics.topArtist.name} is currently your most-rated artist.` : "Rate a few songs to reveal your listening patterns."}</p>
         <Link className="text-link" href="/favourites">Open favourite artists →</Link>
       </section>
     </section>

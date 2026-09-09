@@ -6,6 +6,7 @@ export type SongRanking = {
   titleJapanese: string | null;
   releaseName: string;
   releaseYear: number;
+  durationSeconds: number;
   artistId: string;
   artistName: string;
   artistNameJapanese: string;
@@ -35,6 +36,7 @@ export async function fetchSongRankings(): Promise<SongRanking[]> {
     titleJapanese: row.title_japanese as string | null,
     releaseName: row.release_name as string,
     releaseYear: Number(row.release_year),
+    durationSeconds: Number(row.duration_seconds),
     artistId: row.artist_id as string,
     artistName: row.artist_name as string,
     artistNameJapanese: row.artist_name_japanese as string,

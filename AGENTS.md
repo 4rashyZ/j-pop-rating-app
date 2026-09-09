@@ -2,7 +2,7 @@
 
 ## Project overview
 
-OTO is a small Phase 3 J-Pop discovery and rating app. It is intended as a learning and demonstration project, so prefer straightforward implementations over production-scale architecture.
+OTO is a small Phase 4 J-Pop discovery, rating, and review app. It is intended as a learning and demonstration project, so prefer straightforward implementations over production-scale architecture.
 
 The interface uses an original dark music-streaming design inspired by the general visual language of YouTube Music. Do not copy YouTube branding, logos, proprietary assets, or exact layouts.
 
@@ -16,16 +16,19 @@ The interface uses an original dark music-streaming design inspired by the gener
 - Supabase PostgreSQL for the catalogue, ratings, and favourites
 - `@supabase/ssr` browser client
 
-The catalogue is seeded by `supabase/migrations/202609080001_phase_2.sql`. Profile avatars and artist-image fields are added by `supabase/migrations/202609080002_profile_avatars_and_artist_images.sql`; licensed Ado and ATARASHII GAKKO! visuals are added by `supabase/migrations/202609080003_add_licensed_artist_visuals.sql`; user-supplied local images and the LiSA, Hikaru Utada, and Mrs. GREEN APPLE catalogue entries are added by `supabase/migrations/202609090001_expand_artist_catalogue.sql`; rankings, roles, and admin permissions are added by `supabase/migrations/202609090002_phase_3_rankings_and_admin.sql`; the required catalogue write grants are added by `supabase/migrations/202609090003_fix_admin_catalogue_grants.sql`. Popularity figures remain manually maintained sample data; this phase does not use external social-media APIs.
+The catalogue is seeded by `supabase/migrations/202609080001_phase_2.sql`. Profile avatars and artist-image fields are added by `supabase/migrations/202609080002_profile_avatars_and_artist_images.sql`; licensed Ado and ATARASHII GAKKO! visuals are added by `supabase/migrations/202609080003_add_licensed_artist_visuals.sql`; user-supplied local images and the LiSA, Hikaru Utada, and Mrs. GREEN APPLE catalogue entries are added by `supabase/migrations/202609090001_expand_artist_catalogue.sql`; rankings, roles, and admin permissions are added by `supabase/migrations/202609090002_phase_3_rankings_and_admin.sql`; catalogue write grants are added by `supabase/migrations/202609090003_fix_admin_catalogue_grants.sql`; reviews, reports, safe public views, and moderation policies are added by `supabase/migrations/202609090004_phase_4_reviews_and_moderation.sql`; the additional artist catalogue is seeded by `supabase/migrations/202609090005_expand_phase_4_artist_catalogue.sql`. Popularity figures remain manually maintained sample data; this phase does not use external social-media APIs.
 
 ## Project structure
 
-- `app/page.tsx`: artist discovery, search, and genre filters loaded from Supabase
+- `app/page.tsx`: artist discovery, search, genre filters, and private client-side recommendations
 - `app/artists/[id]/page.tsx`: artist portfolio and song ratings
 - `app/favourites/page.tsx`: saved favourite artists
 - `app/rankings/page.tsx`: public aggregate song and artist charts
+- `app/songs/page.tsx`: searchable and filterable public song catalogue
+- `app/songs/[id]/page.tsx`: song details, rating control, and reviews
 - `app/profile/page.tsx`: private account details and rating history
 - `app/admin/page.tsx`: RLS-protected catalogue editor for administrator accounts
+- `app/admin/reviews/page.tsx`: reported-review search and moderation
 - `app/auth/page.tsx`: email/password sign-up and sign-in
 - `components/`: shared interface and state components
 - `lib/catalog.ts`: catalogue and public rating-summary queries
@@ -68,6 +71,7 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 - A user can add or remove an artist from favourites.
 - A signed-in user can upload one image profile picture from the account menu. Avatar objects must stay in the user's own `avatars/<user-id>/` Storage folder.
 - Ratings and favourites persist in the signed-in user's account.
+- Profile statistics and recommendations must use only the signed-in user's private ratings/favourites plus public catalogue data.
 - Search should match artist names, Japanese names, and genres.
 - Genre filters and search should work together.
 - Popularity figures are sample data and must be labelled as such.
@@ -77,6 +81,10 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 - A user can update their own display name; they cannot change their own role.
 - An `admin` role is assigned manually through Supabase SQL Editor, never from browser code.
 - Catalogue writes and `artist-images` Storage uploads must be protected by admin-only RLS policies.
+- A user must rate a song before writing one review for it.
+- Users can edit or delete only their own reviews and can report published reviews.
+- Public review data must not expose auth user IDs or email addresses.
+- Only administrators can hide, republish, or permanently delete another user's review.
 
 ## Content and data
 
@@ -93,7 +101,6 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 Do not add the following unless the user explicitly requests a later phase:
 
 - YouTube or Spotify API integration
-- Written reviews or comments
 - Social features
 - Native mobile applications
 

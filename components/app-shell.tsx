@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { HeartIcon, HomeIcon, MenuIcon, StarIcon } from "./icons";
+import { HeartIcon, HomeIcon, MenuIcon, MusicIcon, StarIcon } from "./icons";
 import { useApp } from "./app-provider";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -43,12 +43,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className={`sidebar ${menuOpen ? "sidebar-open" : ""}`}>
         <nav aria-label="Main navigation">
           <Link className={pathname === "/" ? "nav-link active" : "nav-link"} href="/" onClick={() => setMenuOpen(false)}><HomeIcon /><span>Discover</span></Link>
+          <Link className={pathname.startsWith("/songs") ? "nav-link active" : "nav-link"} href="/songs" onClick={() => setMenuOpen(false)}><MusicIcon /><span>Songs</span></Link>
           <Link className={pathname === "/rankings" ? "nav-link active" : "nav-link"} href="/rankings" onClick={() => setMenuOpen(false)}><StarIcon /><span>Rankings</span></Link>
           <Link className={pathname === "/favourites" ? "nav-link active" : "nav-link"} href="/favourites" onClick={() => setMenuOpen(false)}><HeartIcon /><span>Favourites</span></Link>
         </nav>
         <div className="sidebar-note">
-          <span className="eyebrow">PHASE 3</span>
-          <p>{user ? "Ratings and favourites are saved to your account." : "Sign in to rate songs and save favourites."}</p>
+          <span className="eyebrow">PHASE 4</span>
+          <p>{user ? "Ratings, reviews, and favourites are saved to your account." : "Sign in to rate songs, write reviews, and save favourites."}</p>
         </div>
       </aside>
       {menuOpen && <button className="menu-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close menu" />}
