@@ -16,7 +16,7 @@ export function PlayIcon({ size = 22 }: IconProps) {
   return <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true"><path d="m8 5 11 7-11 7V5Z" fill="currentColor" /></svg>;
 }
 
-export function StarIcon({ size = 18, filled = false }: IconProps) {
+export function StarIcon({ size = 22, filled = false }: IconProps) {
   return <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9L12 2.8Z" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>;
 }
 

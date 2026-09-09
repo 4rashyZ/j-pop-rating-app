@@ -2,7 +2,7 @@
 
 ## Project overview
 
-OTO is a small Phase 2 J-Pop discovery and rating app. It is intended as a learning and demonstration project, so prefer straightforward implementations over production-scale architecture.
+OTO is a small Phase 3 J-Pop discovery and rating app. It is intended as a learning and demonstration project, so prefer straightforward implementations over production-scale architecture.
 
 The interface uses an original dark music-streaming design inspired by the general visual language of YouTube Music. Do not copy YouTube branding, logos, proprietary assets, or exact layouts.
 
@@ -16,13 +16,16 @@ The interface uses an original dark music-streaming design inspired by the gener
 - Supabase PostgreSQL for the catalogue, ratings, and favourites
 - `@supabase/ssr` browser client
 
-The catalogue is seeded by `supabase/migrations/202609080001_phase_2.sql`. Profile avatars and artist-image fields are added by `supabase/migrations/202609080002_profile_avatars_and_artist_images.sql`; licensed Ado and ATARASHII GAKKO! visuals are added by `supabase/migrations/202609080003_add_licensed_artist_visuals.sql`; user-supplied local images and the LiSA, Hikaru Utada, and Mrs. GREEN APPLE catalogue entries are added by `supabase/migrations/202609090001_expand_artist_catalogue.sql`. Popularity figures remain manually maintained sample data; this phase does not use external social-media APIs.
+The catalogue is seeded by `supabase/migrations/202609080001_phase_2.sql`. Profile avatars and artist-image fields are added by `supabase/migrations/202609080002_profile_avatars_and_artist_images.sql`; licensed Ado and ATARASHII GAKKO! visuals are added by `supabase/migrations/202609080003_add_licensed_artist_visuals.sql`; user-supplied local images and the LiSA, Hikaru Utada, and Mrs. GREEN APPLE catalogue entries are added by `supabase/migrations/202609090001_expand_artist_catalogue.sql`; rankings, roles, and admin permissions are added by `supabase/migrations/202609090002_phase_3_rankings_and_admin.sql`; the required catalogue write grants are added by `supabase/migrations/202609090003_fix_admin_catalogue_grants.sql`. Popularity figures remain manually maintained sample data; this phase does not use external social-media APIs.
 
 ## Project structure
 
 - `app/page.tsx`: artist discovery, search, and genre filters loaded from Supabase
 - `app/artists/[id]/page.tsx`: artist portfolio and song ratings
 - `app/favourites/page.tsx`: saved favourite artists
+- `app/rankings/page.tsx`: public aggregate song and artist charts
+- `app/profile/page.tsx`: private account details and rating history
+- `app/admin/page.tsx`: RLS-protected catalogue editor for administrator accounts
 - `app/auth/page.tsx`: email/password sign-up and sign-in
 - `components/`: shared interface and state components
 - `lib/catalog.ts`: catalogue and public rating-summary queries
@@ -58,7 +61,7 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 - Use CSS custom properties and existing colour tokens before introducing new repeated values.
 - Do not introduce a component library or state-management package without a clear need.
 
-## Phase 2 product rules
+## Product rules
 
 - A user can assign one rating from 1 through 10 to each song.
 - Changing a rating replaces the previous rating.
@@ -70,6 +73,10 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 - Popularity figures are sample data and must be labelled as such.
 - Visitors can read artists, songs, and aggregate song scores without signing in.
 - Individual ratings and favourite lists are private to their owners.
+- Public rankings may expose only aggregate averages, rating counts, and favourite counts.
+- A user can update their own display name; they cannot change their own role.
+- An `admin` role is assigned manually through Supabase SQL Editor, never from browser code.
+- Catalogue writes and `artist-images` Storage uploads must be protected by admin-only RLS policies.
 
 ## Content and data
 
@@ -86,7 +93,6 @@ Before completing a code change, run both `npm run lint` and `npm run build` whe
 Do not add the following unless the user explicitly requests a later phase:
 
 - YouTube or Spotify API integration
-- Administrator dashboards
 - Written reviews or comments
 - Social features
 - Native mobile applications

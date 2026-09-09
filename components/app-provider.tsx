@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type Ratings = Record<string, number>;
-type Profile = { displayName: string; avatarUrl: string | null };
+export type Profile = { displayName: string; avatarUrl: string | null; role: "user" | "admin" };
 type AppContextValue = {
   user: User | null;
   profile: Profile | null;
@@ -16,6 +16,7 @@ type AppContextValue = {
   toggleFavourite: (artistId: string) => Promise<void>;
   setRating: (songId: string, rating: number) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
+  updateProfile: (displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -36,12 +37,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const supabase = createClient();
     const loadPersonalData = async (userId: string) => {
       const [{ data: profileData, error: profileError }, { data: favouriteData, error: favouriteError }, { data: ratingData, error: ratingError }] = await Promise.all([
-        supabase.from("profiles").select("display_name, avatar_url").eq("id", userId).maybeSingle(),
+        supabase.from("profiles").select("display_name, avatar_url, role").eq("id", userId).maybeSingle(),
         supabase.from("favourites").select("artist_id").eq("user_id", userId),
         supabase.from("ratings").select("song_id, rating").eq("user_id", userId),
       ]);
       if (profileError || favouriteError || ratingError) return;
-      setProfile(profileData ? { displayName: profileData.display_name, avatarUrl: profileData.avatar_url } : null);
+      setProfile(profileData ? {
+        displayName: profileData.display_name,
+        avatarUrl: profileData.avatar_url,
+        role: profileData.role === "admin" ? "admin" : "user",
+      } : null);
       setFavourites((favouriteData ?? []).map((row) => row.artist_id));
       setRatings(Object.fromEntries((ratingData ?? []).map((row) => [row.song_id, row.rating])));
     };
@@ -108,10 +113,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const avatarUrl = `${data.publicUrl}?v=${Date.now()}`;
     const { error: profileError } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
     if (profileError) throw profileError;
-    setProfile((current) => current ? { ...current, avatarUrl } : { displayName: user.email?.split("@")[0] ?? "OTO listener", avatarUrl });
+    setProfile((current) => current ? { ...current, avatarUrl } : {
+      displayName: user.email?.split("@")[0] ?? "OTO listener",
+      avatarUrl,
+      role: "user",
+    });
   };
 
-  return <AppContext.Provider value={{ user, profile, favourites, ratings, hydrated, configured: isSupabaseConfigured, toggleFavourite, setRating, uploadAvatar, signOut }}>{children}</AppContext.Provider>;
+  const updateProfile = async (displayName: string) => {
+    if (!user) throw new Error("Please sign in to update your profile.");
+    const trimmedName = displayName.trim();
+    if (trimmedName.length < 1 || trimmedName.length > 60) {
+      throw new Error("Display name must be between 1 and 60 characters.");
+    }
+    const { error } = await createClient().from("profiles").update({ display_name: trimmedName }).eq("id", user.id);
+    if (error) throw error;
+    setProfile((current) => current ? { ...current, displayName: trimmedName } : current);
+  };
+
+  return <AppContext.Provider value={{ user, profile, favourites, ratings, hydrated, configured: isSupabaseConfigured, toggleFavourite, setRating, uploadAvatar, updateProfile, signOut }}>{children}</AppContext.Provider>;
 }
 
 export function useApp() {
